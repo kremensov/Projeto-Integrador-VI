@@ -17,11 +17,12 @@ class SpeechPage extends StatefulWidget {
 enum TtsState {playing, stopped, paused, continued}
 
 class _SpeechPageState extends State<SpeechPage> {
-  //String result = "";
+  int contador = 0;
   File image;
   ImagePicker imagePicker = ImagePicker();
   FlutterTts flutterTts = FlutterTts();
   TtsState ttsState = TtsState.stopped;
+  bool rodando = false;
   bool get isIOS => !kIsWeb && Platform.isIOS;
   bool get isAndroid => !kIsWeb && Platform.isAndroid;
   bool get isWeb => kIsWeb;
@@ -65,6 +66,8 @@ class _SpeechPageState extends State<SpeechPage> {
   }
 
   Future fala() async {
+    rodando = true;
+    contador = 1;
     await flutterTts.setVolume(0.5);
     await flutterTts.setSpeechRate(0.5);
     await flutterTts.setPitch(1.0);
@@ -74,6 +77,13 @@ class _SpeechPageState extends State<SpeechPage> {
         if (controle ==1) setState(() => ttsState = TtsState.playing);
       }
     }
+  }
+
+  Future para() async {
+    rodando = false;
+    contador = 0;
+    var result = await flutterTts.stop();
+    if (result == 1) setState(() => ttsState = TtsState.stopped);
   }
 
 
@@ -120,7 +130,9 @@ class _SpeechPageState extends State<SpeechPage> {
                     width: 110,
                   child: IconButton(
                     icon: new Icon(Icons.replay_circle_filled, size: 100, color: Colors.green,),
-                    onPressed: (){Navigator.pop(context);},
+                    onPressed: (){
+                      para();
+                      Navigator.pop(context);},
                   ),
                 ),
 
@@ -131,8 +143,17 @@ class _SpeechPageState extends State<SpeechPage> {
                   height: 150,
                   width: 110,
                   child: IconButton(
-                    icon: new Icon(Icons.play_arrow_rounded, size: 100, color: Colors.green,),
-                    onPressed: () {fala();},
+                    icon: (rodando)
+                        ?new Icon(Icons.stop, size: 100,color: Colors.red,)
+                        :new Icon(Icons.play_arrow_rounded, size: 100, color: Colors.green,),
+                    onPressed: () {
+                      if (contador == 0){
+                       fala();
+                      } else {
+                       para();
+                      }
+
+                      },
                   ),
                 )
               ],
